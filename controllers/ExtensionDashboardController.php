@@ -43,7 +43,7 @@ class ExtensionDashboardController extends Controller
             $ssh->read('has been removed');
 
             return redirect()->route('admin.extensions.{identifier}.index');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Alert::danger('Error - Unknown Error or SSH is disabled.')->flash();
             return redirect()->back();
         }
@@ -69,7 +69,7 @@ class ExtensionDashboardController extends Controller
             $ssh->read('has been installed');
 
             return redirect()->route('admin.extensions.{identifier}.index');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Alert::danger('Error - Unknown Error or SSH is disabled.')->flash();
             return redirect()->back();
         }
