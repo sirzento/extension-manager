@@ -13,6 +13,20 @@
         border-color: #333;
         color: #333;
     }
+    .fa-spinner.spinning {
+        animation: spin 1s infinite linear;
+        -webkit-animation: spin2 1s infinite linear;
+    }
+
+    @keyframes spin {
+        from { transform: scale(1) rotate(0deg); }
+        to { transform: scale(1) rotate(360deg); }
+    }
+
+    @-webkit-keyframes spin2 {
+        from { -webkit-transform: rotate(0deg); }
+        to { -webkit-transform: rotate(360deg); }
+    }
 </style>
 <button class="btn btn-primary" data-toggle="modal" data-target="#settingsModal" style="margin-bottom: 10px;">Settings</button>
 <div class="row" style="padding-left: 15px; padding-right: 10px;">
@@ -93,7 +107,7 @@
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content" style="background-color:transparent">
-      <form action="/extensions/{identifier}/deleteExtension" method="POST" autocomplete="off">
+      <form action="/extensions/{identifier}/deleteExtension" method="POST" autocomplete="off" id="delete-form">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff;box-shadow:none"><span aria-hidden="true"><i class="bi bi-x"></i></span></button>
           <h3 class="modal-title">
@@ -103,10 +117,15 @@
         </div>
 
         <div class="modal-body">
-          Should the extension <strong class="font-weight-bold modal-identifier"></strong> really be deleted?
-          <br><br>
-          Password confirmation for SSH user <strong>{{ $user }}</strong>
-          <input type="password" name="password" value="" class="form-control">
+          <span id="delete-body">
+            Are you sure you want to delete the extension <strong class="font-weight-bold modal-identifier"></strong>?
+            <br><br>
+            Password confirmation for SSH user <strong>{{ $user }}</strong>
+            <input type="password" name="password" value="" class="form-control">
+          </span>
+          <span id="delete-loading" style="display: none;">
+            <i class="fa fa-spinner spinning" aria-hidden="true" style="font-size: 25px;"></i>  Deleting extension...
+          </span>
         </div>
 
         <div class="modal-footer">
@@ -115,10 +134,10 @@
           <input type="hidden" name="identifier" value="" id="identifier">
           <div class="row">
             <div class="col-sm-10">
-              <p class="text-muted small text-left">Deleting extensions wont clear all of the configured extension settings. Reinstalling them later will fully restore the settings.</p>
+              <p class="text-muted small text-left">Deleting an extension does not remove its configuration data. If reinstalled later, all previous settings will be fully restored.</p>
             </div>
             <div class="col-sm-2">
-              <button type="submit" class="btn btn-danger btn-sm" style="width:100%; margin-top:10px; margin-bottom:10px; border-radius:6px">Delete</button>
+              <button type="submit" class="btn btn-danger btn-sm" id="delete-button" style="width:100%; margin-top:10px; margin-bottom:10px; border-radius:6px">Delete</button>
             </div>
           </div>
         </div>
@@ -141,8 +160,13 @@
       </div>
 
       <div class="modal-body">
-        Password confirmation for SSH user <strong>{{ $user }}</strong>
-        <input type="password" name="password" id="installPasswordModal" value="" class="form-control">
+        <span id="install-body">
+          Password confirmation for SSH user <strong>{{ $user }}</strong>
+          <input type="password" name="password" id="installPasswordModal" value="" class="form-control">
+        </span>
+        <span id="install-loading" style="display: none;">
+          <i class="fa fa-spinner spinning" aria-hidden="true" style="font-size: 25px;"></i>  Installing extension...
+        </span>
       </div>
 
       <div class="modal-footer">
@@ -152,7 +176,7 @@
           <div class="col-sm-10">
           </div>
           <div class="col-sm-2">
-            <button type="button" onclick="uploadAndInstall()" class="btn btn-primary btn-sm" style="width:100%; margin-top:10px; margin-bottom:10px; border-radius:6px">Install</button>
+            <button type="button" onclick="uploadAndInstall()" id="install-button" class="btn btn-primary btn-sm" style="width:100%; margin-top:10px; margin-bottom:10px; border-radius:6px">Install</button>
           </div>
         </div>
       </div>
@@ -172,6 +196,13 @@
       modal.find('.modal-identifier').text(identifier)
       modal.find('#identifier').val(identifier)
     })
+
+    $(document).on('submit','#delete-form',function(){
+      $('#delete-body').hide();
+      $('#delete-loading').show();
+      $('#delete-button').prop("disabled",true);
+    });
+
 
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
@@ -199,5 +230,8 @@
   function uploadAndInstall() {
     document.getElementById('installPassword').value = document.getElementById('installPasswordModal').value;
     document.getElementById('upload-form').submit();
+    $('#install-body').hide();
+    $('#install-loading').show();
+    $('#install-button').prop("disabled",true);
   }
 </script>

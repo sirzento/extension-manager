@@ -5,8 +5,3 @@ use Pterodactyl\BlueprintFramework\Extensions\{identifier}\ExtensionDashboardCon
 
 Route::post('/deleteExtension', [ExtensionDashboardController::class, 'deleteExtension']);
 Route::post('/upload', [ExtensionDashboardController::class, 'upload']);
-
-
-// TODO
-// Prüfen was passiert wenn man sich mit root oder sudo user anmeldet
-// Ladekreis beim Installieren/Löschen
