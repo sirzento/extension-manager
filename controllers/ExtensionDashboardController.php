@@ -21,48 +21,58 @@ class ExtensionDashboardController extends Controller
 
     public function deleteExtension({identifier}DeleteFormRequest $request)
     {
-        // SSH - Delete extension
-        $username = $this->blueprint->dbGet('{identifier}', 'user');
-        $ssh = new SSH2('127.0.0.1');
-        if(!$ssh->login($username, $request['password'])){
-            Alert::danger('Error - Username or password wrong or SSH is disabled.')->flash();
+        try {
+            // SSH - Delete extension
+            $username = $this->blueprint->dbGet('{identifier}', 'user');
+            $ssh = new SSH2('127.0.0.1');
+            if(!$ssh->login($username, $request['password'])){
+                Alert::danger('Error - Username or password wrong.')->flash();
+                return redirect()->back();
+            }
+
+            $canSudoWithoutPassword = $ssh->exec('sudo -n true');
+            $sudoRequiresPassword = strpos($canSudoWithoutPassword, 'password') !== false || $ssh->getExitStatus() !== 0;
+
+            $ssh->write("sudo -k /usr/local/bin/blueprint -r " . $request['identifier'] . "\n");
+            if ($sudoRequiresPassword) {
+                $ssh->read('Password:');
+                $ssh->write($request['password'] . "\n");
+            }
+            $ssh->read('(y/N)');
+            $ssh->write("y\n");
+            $ssh->read('has been removed');
+
+            return redirect()->route('admin.extensions.{identifier}.index');
+        } catch (Exception $e) {
+            Alert::danger('Error - Unknown Error or SSH is disabled.')->flash();
             return redirect()->back();
         }
-
-        $canSudoWithoutPassword = $ssh->exec('sudo -n true');
-        $sudoRequiresPassword = strpos($canSudoWithoutPassword, 'password') !== false || $ssh->getExitStatus() !== 0;
-
-        $ssh->write("sudo -k /usr/local/bin/blueprint -r " . $request['identifier'] . "\n");
-        if ($sudoRequiresPassword) {
-            $ssh->read('Password:');
-            $ssh->write($request['password'] . "\n");
-        }
-        $ssh->read('(y/N)');
-        $ssh->write("y\n");
-        $ssh->read('has been removed');
-
-        return redirect()->route('admin.extensions.{identifier}.index');
     }
 
     public function upload({identifier}InstallFormRequest $request)
     {
-        // Upload file
-        $filename = $request->file('file')->getClientOriginalName();
-        $request->file('file')->move('{root}', $filename);
+        try {
+            // Upload file
+            $filename = $request->file('file')->getClientOriginalName();
+            $request->file('file')->move('{root}', $filename);
 
-        // SSH - Install extension
-        $username = $this->blueprint->dbGet('{identifier}', 'user');
-        $ssh = new SSH2('127.0.0.1');
-        if(!$ssh->login($username, $request['password'])){
-            Alert::danger('Error - Username or password wrong or SSH is disabled.')->flash();
+            // SSH - Install extension
+            $username = $this->blueprint->dbGet('{identifier}', 'user');
+            $ssh = new SSH2('127.0.0.1');
+            if(!$ssh->login($username, $request['password'])){
+                Alert::danger('Error - Username or password wrong or SSH is disabled.')->flash();
+                return redirect()->back();
+            }
+            $ssh->write("sudo -k /usr/local/bin/blueprint -i " . $filename . "\n");
+            $ssh->read('Password:');
+            $ssh->write($request['password'] . "\n");
+            $ssh->read('has been installed');
+
+            return redirect()->route('admin.extensions.{identifier}.index');
+        } catch (Exception $e) {
+            Alert::danger('Error - Unknown Error or SSH is disabled.')->flash();
             return redirect()->back();
         }
-        $ssh->write("sudo -k /usr/local/bin/blueprint -i " . $filename . "\n");
-        $ssh->read('Password:');
-        $ssh->write($request['password'] . "\n");
-        $ssh->read('has been installed');
-
-        return redirect()->route('admin.extensions.{identifier}.index');
     }
 }
 
