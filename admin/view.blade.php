@@ -51,8 +51,8 @@
     <div class="extension-btn" style="width:100%;margin-bottom:17px;">
       <form id="upload-form" action="/extensions/{identifier}/upload" method="POST" enctype="multipart/form-data">
           {{ csrf_field() }}
-          <div id="drop-zone">Drag and drop to install</div>
-          <input type="file" name="file" id="file-input" style="visibility: hidden;" hidden>
+          <div id="drop-zone" style="cursor: pointer;" onclick="document.getElementById('file-input').click()">Click or drag and drop to install</div>
+          <input type="file" onchange="$('#installModal').modal()" name="file" id="file-input" style="visibility: hidden;" hidden>
           <input type="password" name="password" id="installPassword" value="" style="visibility: hidden;" hidden>
           <input type="file" name="sshkey" id="installSshkey" value="" style="visibility: hidden;" hidden>
       </form>
