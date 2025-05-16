@@ -54,6 +54,7 @@
           <div id="drop-zone">Drag and drop to install</div>
           <input type="file" name="file" id="file-input" style="visibility: hidden;" hidden>
           <input type="password" name="password" id="installPassword" value="" style="visibility: hidden;" hidden>
+          <input type="file" name="sshkey" id="installSshkey" value="" style="visibility: hidden;" hidden>
       </form>
   </div>
   </div>
@@ -84,6 +85,25 @@
           placeholder="root"
           class="form-control"
         />
+
+        SSH Port
+        <input 
+          type="text"
+          name="port"
+          id="port"
+          value="{{ $port }}"
+          placeholder="20"
+          class="form-control"
+        />
+        <br>
+        
+        <input 
+          type="checkbox"
+          name="useSSHKey"
+          id="useSSHKey"
+          {{  ($useSSHKey == 1 ? ' checked' : '') }}
+        />
+        <label for="useSSHKey">Use SSH key instead of password for SSH auth.</label>
         </div>
 
         <div class="modal-footer">
@@ -107,7 +127,7 @@
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content" style="background-color:transparent">
-      <form action="/extensions/{identifier}/deleteExtension" method="POST" autocomplete="off" id="delete-form">
+      <form action="/extensions/{identifier}/deleteExtension" method="POST" id="delete-form" enctype="multipart/form-data">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:#fff;box-shadow:none"><span aria-hidden="true"><i class="bi bi-x"></i></span></button>
           <h3 class="modal-title">
@@ -120,8 +140,13 @@
           <span id="delete-body">
             Are you sure you want to delete the extension <strong class="font-weight-bold modal-identifier"></strong>?
             <br><br>
-            Password confirmation for SSH user <strong>{{ $user }}</strong>
-            <input type="password" name="password" value="" class="form-control">
+            @if($useSSHKey)
+              SSH key for authentication (User <strong>{{ $user }}</strong>)
+              <input type="file" name="sshkey" id="sshkey" class="form-control">
+            @else
+              Password confirmation for SSH user <strong>{{ $user }}</strong>
+              <input type="password" name="password" value="" class="form-control">
+            @endif
           </span>
           <span id="delete-loading" style="display: none;">
             <i class="fa fa-spinner spinning" aria-hidden="true" style="font-size: 25px;"></i>  Deleting extension...
@@ -130,7 +155,6 @@
 
         <div class="modal-footer">
           {{ csrf_field() }}
-          <input type="hidden" name="_method" value="POST">
           <input type="hidden" name="identifier" value="" id="identifier">
           <div class="row">
             <div class="col-sm-10">
@@ -161,8 +185,13 @@
 
       <div class="modal-body">
         <span id="install-body">
-          Password confirmation for SSH user <strong>{{ $user }}</strong>
-          <input type="password" name="password" id="installPasswordModal" value="" class="form-control">
+          @if($useSSHKey)
+            SSH key for authentication (User <strong>{{ $user }}</strong>)
+            <input type="file" name="sshkey" id="installSshkeyModal" class="form-control">
+          @else
+            Password confirmation for SSH user <strong>{{ $user }}</strong>
+            <input type="password" name="password" id="installPasswordModal" value="" class="form-control">
+          @endif
         </span>
         <span id="install-loading" style="display: none;">
           <i class="fa fa-spinner spinning" aria-hidden="true" style="font-size: 25px;"></i>  Installing extension...
@@ -228,7 +257,10 @@
     });
   })();
   function uploadAndInstall() {
-    document.getElementById('installPassword').value = document.getElementById('installPasswordModal').value;
+    if (document.getElementById('installPasswordModal'))
+      document.getElementById('installPassword').value = document.getElementById('installPasswordModal').value;
+    if (document.getElementById('installSshkeyModal'))
+      document.getElementById('installSshkey').files = document.getElementById('installSshkeyModal').files;
     document.getElementById('upload-form').submit();
     $('#install-body').hide();
     $('#install-loading').show();

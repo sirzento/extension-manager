@@ -25,18 +25,23 @@ class {identifier}ExtensionController extends Controller
   public function index(): View
   {
     $user = $this->blueprint->dbGet('{identifier}', 'user');
+    $port = $this->blueprint->dbGet('{identifier}', 'port');
+    $useSSHKey = $this->blueprint->dbGet('{identifier}', 'useSSHKey');
 
     return $this->view->make(
       'admin.extensions.{identifier}.index', [
         'root' => "/admin/extensions/{identifier}",
         'blueprint' => $this->blueprint,
         'user' => $user,
+        'port' => $port,
+        'useSSHKey' => $useSSHKey,
       ]
     );
   }
 
   public function update({identifier}SettingsFormRequest $request): RedirectResponse
   {
+      $request['useSSHKey'] = $request->has('useSSHKey');
       foreach ($request->normalize() as $key => $value) {
           $this->blueprint->dbSet("{identifier}", $key, $value);
       }
@@ -51,6 +56,8 @@ class {identifier}SettingsFormRequest extends AdminFormRequest
     {
         return [
             'user' => ['string'],
+            'port' => ['numeric', 'gt:0'],
+            'useSSHKey' => ['sometimes'],
         ];
     }
 
@@ -58,6 +65,8 @@ class {identifier}SettingsFormRequest extends AdminFormRequest
     {
         return [
             'user' => 'Username',
+            'port' => 'SSH Port',
+            'useSSHKey' => 'use SSH key',
         ];
     }
 }
