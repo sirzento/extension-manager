@@ -11,7 +11,7 @@ return new class extends Migration
         $blueprint = app(BlueprintExtensionLibrary::class);
 
         $blueprint->dbSetMany("{identifier}", [
-            'port' => 20,
+            'port' => 22,
             'useSSHKey' => false,
         ]);
     }
